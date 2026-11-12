@@ -1,0 +1,2 @@
+"""StudyDesk core application package."""
+

@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List
-from config import MEMORY_FILE
+from .config import MEMORY_FILE
 
 DEFAULT_MEMORY_STRUCTURE: Dict[str, Any] = {
     "topics_studied": [],

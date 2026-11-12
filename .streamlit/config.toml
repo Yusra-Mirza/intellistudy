@@ -1,5 +1,10 @@
-[global]
-allowUnsafeHTMLInMarkdown = true
+[theme]
+base = "light"
+primaryColor = "#C2410C"
+backgroundColor = "#FAF7F2"
+secondaryBackgroundColor = "#F3EFE6"
+textColor = "#1C1917"
+font = "sans serif"
 
 [server]
 fileWatcherType = "auto"

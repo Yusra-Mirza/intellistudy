@@ -6,7 +6,7 @@ student knowledge level, and identified weak topics.
 
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional
-from config import generate_gemini_text
+from .config import generate_gemini_text
 
 def calculate_days_remaining(exam_date_str: str) -> int:
     """
@@ -104,7 +104,7 @@ def generate_fallback_study_plan(
     review_time = round(daily_hours * 0.15, 1)
 
     lines = [
-        f"## 📅 {plan_days}-Day Accelerated Study Plan: {subject}",
+        f"## {plan_days}-Day Study Plan: {subject}",
         f"**Target Level:** {knowledge_level} | **Daily Commitment:** {daily_hours} hours | **Priority Areas:** {weak_str}\n",
         "---"
     ]
@@ -125,15 +125,15 @@ def generate_fallback_study_plan(
 
         lines.extend([
             f"### Day {day}: {title}",
-            f"- 🎯 **Primary Focus:** {focus}",
-            f"- 📖 **Theory & Notes ({half_time} hrs):** Read key definitions, derive core principles, and summarize formulas.",
-            f"- ✍️ **Active Practice ({practice_time} hrs):** Solve 5-10 practice questions and take an interactive quiz.",
-            f"- 🧠 **Spaced Recall ({review_time} hrs):** Write down top 5 takeaways from memory without looking at notes.\n"
+            f"- **Primary Focus:** {focus}",
+            f"- **Theory & Notes ({half_time} hrs):** Read key definitions, derive core principles, and summarize formulas.",
+            f"- **Active Practice ({practice_time} hrs):** Solve 5-10 practice questions and take an interactive quiz.",
+            f"- **Spaced Recall ({review_time} hrs):** Write down top 5 takeaways from memory without looking at notes.\n"
         ])
 
     lines.extend([
         "---",
-        "### 💡 3 High-Impact Exam Tips",
+        "### 3 High-Impact Exam Tips",
         "1. **Active Recall Beats Passive Reading:** Test yourself on concepts rather than repeatedly re-reading notes.",
         "2. **The Pomodoro Technique:** Work in 25-minute sprints with 5-minute pauses to maintain peak mental focus.",
         "3. **Sleep Consolidates Memory:** Avoid all-nighters before the exam to allow your brain to synthesize knowledge."
@@ -152,8 +152,12 @@ def parse_study_plan_to_days(plan_markdown: str, weak_topics: Optional[List[str]
 
     days: List[Dict[str, Any]] = []
 
-    # Match day headers like: ### Day 1: Title or ## Day 1 - Title
-    day_splits = re.split(r"(?:^|\n)(?:#{2,4}\s*|\*{2})Day\s+(\d+)[:\s\-]+([^\n*#]+)(?:\*{2})?", plan_markdown, flags=re.IGNORECASE)
+    # Match day headers like: ### Day 1: Title, ### **Day 1: Title**, or ## Day 1 - **Title**
+    day_splits = re.split(
+        r"(?:^|\n)\s*(?:#{2,4}\s*)?(?:\*{2}\s*)?Day\s+(\d+)\s*[:\-]\s*([^\n]+)",
+        plan_markdown,
+        flags=re.IGNORECASE,
+    )
 
     if len(day_splits) > 2:
         i = 1

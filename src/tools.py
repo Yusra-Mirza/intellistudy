@@ -7,11 +7,12 @@ Implements simple, deterministic agent behavior:
 """
 
 import re
+from datetime import date, timedelta
 from typing import Dict, Any, Optional, List
-import rag
-import quiz
-import memory
-import study_plan
+from . import rag
+from . import quiz
+from . import memory
+from . import study_plan
 
 # 1. Modular Tool Implementations
 
@@ -127,9 +128,9 @@ def route_and_execute(user_prompt: str, context_topic: str = "General Study") ->
 
         questions = generate_quiz(topic=topic, num_questions=5, difficulty="Medium")
         formatted = (
-            f"🎯 **Tool Selected:** `generate_quiz`\n\n"
-            f"I have generated a 5-question quiz for **{topic}**! "
-            f"You can practice it directly in the **📝 Quiz** tab."
+            f"**Tool Selected:** `generate_quiz`\n\n"
+            f"I put together a 5-question practice quiz on **{topic}**. "
+            f"Head over to the **Quiz** tab whenever you are ready to try it."
         )
         return {
             "tool_selected": "generate_quiz",
@@ -142,16 +143,16 @@ def route_and_execute(user_prompt: str, context_topic: str = "General Study") ->
     elif tool_name == "get_student_memory":
         mem = get_student_memory()
         studied = ", ".join(mem["topics_studied"]) if mem["topics_studied"] else "None recorded yet"
-        weak = ", ".join(mem["weak_topics"]) if mem["weak_topics"] else "None (great job!)"
+        weak = ", ".join(mem["weak_topics"]) if mem["weak_topics"] else "None right now"
         
         formatted = (
-            f"📊 **Tool Selected:** `get_student_memory`\n\n"
-            f"### 📈 Your Learning Progress Snapshot\n"
+            f"**Tool Selected:** `get_student_memory`\n\n"
+            f"### Your Learning Snapshot\n"
             f"- **Topics Studied:** {studied}\n"
-            f"- **Quizzes Completed:** {mem['total_quizzes_taken']} (Avg Score: {mem['average_quiz_score']}%)\n"
+            f"- **Quizzes Completed:** {mem['total_quizzes_taken']} (Average: {mem['average_quiz_score']}%)\n"
             f"- **Questions Asked:** {mem['total_questions_asked']}\n"
-            f"- **Focus Areas / Weak Topics:** {weak}\n\n"
-            f"*Check the **📊 My Progress** tab for full analytics!*"
+            f"- **Areas to Revisit:** {weak}\n\n"
+            f"*Open the **My Progress** tab for score trends and full history.*"
         )
         return {
             "tool_selected": "get_student_memory",
@@ -164,18 +165,19 @@ def route_and_execute(user_prompt: str, context_topic: str = "General Study") ->
     elif tool_name == "create_study_plan":
         mem = memory.load_memory()
         subject = context_topic if context_topic and context_topic != "General Study" else "Core Subject"
+        default_exam = (date.today() + timedelta(days=7)).strftime("%Y-%m-%d")
         plan = create_study_plan(
             subject=subject,
-            exam_date="2026-09-20",
+            exam_date=default_exam,
             daily_hours=2.0,
             knowledge_level="Intermediate",
             weak_topics=mem.get("weak_topics", [])
         )
         formatted = (
-            f"📅 **Tool Selected:** `create_study_plan`\n\n"
-            f"Here is a personalized study schedule for **{subject}** based on your performance:\n\n"
+            f"**Tool Selected:** `create_study_plan`\n\n"
+            f"Here is a 7-day study schedule for **{subject}** shaped around your recent topics:\n\n"
             f"{plan['plan_markdown']}\n\n"
-            f"*You can configure custom exam dates and study hours in the **📅 Study Plan** tab.*"
+            f"*You can adjust exam dates and daily hours in the **Study Plan** tab.*"
         )
         return {
             "tool_selected": "create_study_plan",
@@ -189,7 +191,7 @@ def route_and_execute(user_prompt: str, context_topic: str = "General Study") ->
         # Default: search_study_material
         rag_res = search_study_material(query=user_prompt)
         formatted = (
-            f"🔍 **Tool Selected:** `search_study_material`\n\n"
+            f"**Tool Selected:** `search_study_material`\n\n"
             f"{rag_res.get('answer', '')}"
         )
         return {

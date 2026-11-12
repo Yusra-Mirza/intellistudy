@@ -11,25 +11,29 @@ Implements:
 
 import os
 import sys
+import sysconfig
 import re
 import json
 import numpy as np
 from pathlib import Path
 from typing import List, Dict, Any, Tuple, Optional
 
-# Windows DLL directory resolution for PyTorch & FAISS in virtual environment
+# Windows DLL directory resolution for PyTorch & FAISS (supports both venv and global Python)
 if sys.platform == "win32":
     try:
-        site_packages = Path(sys.executable).parent.parent / "Lib" / "site-packages"
-        torch_lib = site_packages / "torch" / "lib"
-        if torch_lib.exists():
-            os.add_dll_directory(str(torch_lib))
+        for torch_lib in (
+            Path(sysconfig.get_paths().get("purelib", "")) / "torch" / "lib",
+            Path(sys.prefix) / "Lib" / "site-packages" / "torch" / "lib",
+        ):
+            if torch_lib.exists():
+                os.add_dll_directory(str(torch_lib))
+                break
     except Exception:
         pass
 
 import pypdf
 
-from config import (
+from .config import (
     VECTOR_STORE_DIR,
     EMBEDDING_MODEL_NAME,
     CHUNK_SIZE,
@@ -37,7 +41,7 @@ from config import (
     TOP_K_RESULTS,
     generate_gemini_text
 )
-import memory
+from . import memory
 
 # Persistent index file paths
 FAISS_INDEX_FILE = VECTOR_STORE_DIR / "index.faiss"

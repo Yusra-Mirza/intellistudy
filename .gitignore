@@ -23,6 +23,7 @@ wheels/
 # Virtual Environments
 .venv/
 venv/
+myenv/
 ENV/
 env/
 env.bak/
@@ -62,3 +63,6 @@ htmlcov/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Git Bundles
+*.bundle

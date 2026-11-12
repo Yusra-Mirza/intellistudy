@@ -7,8 +7,8 @@ grades student responses, generates explanations, and records performance in mem
 import json
 import re
 from typing import List, Dict, Any, Optional
-from config import generate_gemini_text
-import memory
+from .config import generate_gemini_text
+from . import memory
 
 def clean_json_string(raw_text: str) -> str:
     """
@@ -51,7 +51,8 @@ def generate_quiz_questions(
     - subtopic: str
     """
     num_questions = 10 if num_questions >= 10 else 5
-    difficulty = difficulty.capitalize() if difficulty in ["Easy", "Medium", "Hard"] else "Medium"
+    norm_diff = str(difficulty).strip().capitalize()
+    difficulty = norm_diff if norm_diff in ["Easy", "Medium", "Hard"] else "Medium"
 
     context_prompt = ""
     if context and context.strip():

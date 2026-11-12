@@ -5,9 +5,14 @@ Handles paths, environment variables, Gemini API setup, and model parameters.
 
 import os
 import sys
+import sysconfig
 import warnings
 from pathlib import Path
 from dotenv import load_dotenv
+
+# Prevent OpenMP thread conflicts between PyTorch and FAISS on macOS/ARM64
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
 
 # Suppress deprecation warnings from legacy packages
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -20,18 +25,22 @@ for _p_var in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_pr
 if "NO_PROXY" not in os.environ and "no_proxy" not in os.environ:
     os.environ["NO_PROXY"] = "*"
 
-# Fix for Windows Python 3.8+ DLL loading (PyTorch / C extensions in virtual environments)
+# Fix for Windows Python 3.8+ DLL loading (PyTorch / C extensions in venv or global Python)
 if sys.platform == "win32":
     try:
-        site_packages = Path(sys.executable).parent.parent / "Lib" / "site-packages"
-        torch_lib = site_packages / "torch" / "lib"
-        if torch_lib.exists():
-            os.add_dll_directory(str(torch_lib))
+        candidates = [
+            Path(sysconfig.get_paths().get("purelib", "")) / "torch" / "lib",
+            Path(sys.prefix) / "Lib" / "site-packages" / "torch" / "lib",
+        ]
+        for torch_lib in candidates:
+            if torch_lib.exists():
+                os.add_dll_directory(str(torch_lib))
+                break
     except Exception:
         pass
 
-# Base directory
-BASE_DIR = Path(__file__).resolve().parent
+# Project root directory (parent of src/)
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
 ENV_FILE = BASE_DIR / ".env"
@@ -122,11 +131,16 @@ def generate_gemini_text(prompt: str, system_instruction: str = None) -> str:
     except Exception as e:
         err_msg = str(e)
         model_name = os.getenv("GEMINI_MODEL", GEMINI_MODEL_NAME).strip()
-        if "404" in err_msg or "NotFound" in err_msg or "models/" in err_msg:
+        if "NameResolutionError" in err_msg or "ConnectionError" in err_msg or "Max retries exceeded" in err_msg:
+            raise RuntimeError(
+                f"Could not reach Google Gemini API ({type(e).__name__}). "
+                f"Check your internet connection or proxy settings.\nDetails: {err_msg}"
+            ) from e
+        elif "404" in err_msg or "NotFound" in err_msg:
             raise RuntimeError(
                 f"The configured Gemini model '{model_name}' was not found or is unavailable for your API key.\n"
                 f"Error details: {err_msg}\n\n"
-                f"Tip: Update GEMINI_MODEL in your .env file (e.g. GEMINI_MODEL=gemini-2.5-flash, gemini-2.5-pro, or gemini-flash-latest)."
+                f"Tip: Update GEMINI_MODEL in your .env file (e.g. GEMINI_MODEL=gemini-3.5-flash or gemini-3.8-flash)."
             ) from e
         elif "API_KEY_INVALID" in err_msg or "400" in err_msg and "API key" in err_msg.lower():
             raise RuntimeError(
