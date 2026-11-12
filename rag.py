@@ -55,7 +55,11 @@ def get_embedding_model():
     global _EMBEDDING_MODEL
     if _EMBEDDING_MODEL is None:
         from sentence_transformers import SentenceTransformer
-        _EMBEDDING_MODEL = SentenceTransformer(EMBEDDING_MODEL_NAME)
+        try:
+            # Fast offline load if model weights are already cached locally
+            _EMBEDDING_MODEL = SentenceTransformer(EMBEDDING_MODEL_NAME, local_files_only=True)
+        except Exception:
+            _EMBEDDING_MODEL = SentenceTransformer(EMBEDDING_MODEL_NAME)
     return _EMBEDDING_MODEL
 
 def clean_text(text: str) -> str:
@@ -246,14 +250,19 @@ def process_and_index_pdf(pdf_path: str | Path, original_filename: str) -> Dict[
     if not chunks:
         raise ValueError(f"No usable text chunks could be extracted from '{original_filename}'.")
 
-    # Generate embeddings
+    # Generate embeddings in batches for speed (batch_size=64 is optimal for CPU)
     embedder = get_embedding_model()
     chunk_texts = [c["text"] for c in chunks]
-    embeddings = embedder.encode(chunk_texts, convert_to_numpy=True, show_progress_bar=False)
+    embeddings = embedder.encode(
+        chunk_texts,
+        convert_to_numpy=True,
+        show_progress_bar=False,
+        batch_size=64,
+        normalize_embeddings=True   # built-in L2 norm — no separate faiss.normalize_L2 needed
+    )
 
-    # Cast to float32 and normalize for cosine similarity via inner product
+    # Cast to float32 (required by FAISS)
     embeddings = embeddings.astype(np.float32)
-    faiss.normalize_L2(embeddings)
 
     dimension = embeddings.shape[1]
 

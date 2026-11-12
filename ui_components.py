@@ -767,7 +767,7 @@ def render_hero_header(title: str, subtitle: str, badge: str = "AI Learning Plat
         <p class="hero-subtitle">{subtitle}</p>
     </div>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_ai_status_card(is_ready: bool, model_name: str, total_chunks: int, total_files: int):
@@ -799,7 +799,7 @@ def render_ai_status_card(is_ready: bool, model_name: str, total_chunks: int, to
         </div>
     </div>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_metric_card(icon: str, label: str, value: Any, subtext: Optional[str] = None):
@@ -815,7 +815,7 @@ def render_metric_card(icon: str, label: str, value: Any, subtext: Optional[str]
         {sub_html}
     </div>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_empty_state(icon: str, title: str, description: str):
@@ -827,7 +827,7 @@ def render_empty_state(icon: str, title: str, description: str):
         <div class="empty-state-desc">{description}</div>
     </div>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_source_chips(sources: List[Dict[str, Any]]):
@@ -849,7 +849,7 @@ def render_source_chips(sources: List[Dict[str, Any]]):
         {' '.join(chips)}
     </div>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_rag_pipeline_flow(query: str, chunk_count: int, top_score: float = 0.0):
@@ -909,7 +909,7 @@ def render_rag_pipeline_flow(query: str, chunk_count: int, top_score: float = 0.
         </div>
     </div>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_agent_status_banner(tool_name: str, step_status: str = "Active"):
@@ -931,7 +931,7 @@ def render_agent_status_banner(tool_name: str, step_status: str = "Active"):
         </div>
     </div>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_performance_card(score: int, total: int, percentage: float):
@@ -967,7 +967,7 @@ def render_performance_card(score: int, total: int, percentage: float):
         </div>
     </div>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_weak_topic_bar(topic: str, mastery_pct: float):
@@ -1005,7 +1005,7 @@ def render_weak_topic_bar(topic: str, mastery_pct: float):
         </div>
     </div>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_stepper(current_step: int = 5):
@@ -1046,7 +1046,7 @@ def render_stepper(current_step: int = 5):
         {''.join(step_items)}
     </div>
     """
-    st.markdown(html, unsafe_allow_html=True)
+    return html
 
 
 def render_question_review_card(item: Dict[str, Any]):
@@ -1084,7 +1084,7 @@ def render_question_review_card(item: Dict[str, Any]):
         f'</div>'
         f'</div>'
     )
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_recent_question_card(item: Dict[str, Any]):
@@ -1101,7 +1101,7 @@ def render_recent_question_card(item: Dict[str, Any]):
         f'<span style="font-size:1.1rem; color:#4F46E5;">💬</span>'
         f'</div>'
     )
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_document_card(doc: Dict[str, Any]):
@@ -1125,7 +1125,7 @@ def render_document_card(doc: Dict[str, Any]):
         f'<span class="doc-status-badge">✓ Ready</span>'
         f'</div>'
     )
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 def render_timeline_day_card_header(day_number: int, title: str, is_completed: bool, is_weak: bool, weak_label: Optional[str] = None):
@@ -1148,6 +1148,6 @@ def render_timeline_day_card_header(day_number: int, title: str, is_completed: b
         f'</div>'
         f'</div>'
     )
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 

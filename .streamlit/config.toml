@@ -1,6 +1,16 @@
+[global]
+allowUnsafeHTMLInMarkdown = true
+
 [server]
 fileWatcherType = "auto"
 headless = true
 
 [browser]
 gatherUsageStats = false
+
+[runner]
+fastReruns = true
+
+[client]
+showErrorDetails = true
+toolbarMode = "minimal"

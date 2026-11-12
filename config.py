@@ -12,6 +12,14 @@ from dotenv import load_dotenv
 # Suppress deprecation warnings from legacy packages
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+# Bypass unauthenticated institutional proxies (e.g. 172.31.*) that cause 407 error retry loops
+for _p_var in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
+    _val = os.environ.get(_p_var, "")
+    if "172.31." in _val or "3128" in _val:
+        os.environ.pop(_p_var, None)
+if "NO_PROXY" not in os.environ and "no_proxy" not in os.environ:
+    os.environ["NO_PROXY"] = "*"
+
 # Fix for Windows Python 3.8+ DLL loading (PyTorch / C extensions in virtual environments)
 if sys.platform == "win32":
     try:
@@ -45,7 +53,7 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Gemini API Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip()
 
 # Embedding & Vector Search Configuration
 EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2").strip()
@@ -72,14 +80,15 @@ def get_gemini_client():
         )
 
     import google.generativeai as genai
-    genai.configure(api_key=api_key)
+    # Use REST transport to prevent gRPC from routing through unauthenticated institutional proxies
+    genai.configure(api_key=api_key, transport="rest")
     return genai
 
 def generate_gemini_text(prompt: str, system_instruction: str = None) -> str:
     """
     Executes a prompt against the configured Gemini model with comprehensive error handling.
     If the requested model encounters Google's API 404 deprecation for new accounts,
-    it automatically falls back to gemini-flash-latest so the application never crashes.
+    it automatically falls back to gemini-3.5-flash so the application never crashes.
     """
     try:
         genai = get_gemini_client()
@@ -96,8 +105,8 @@ def generate_gemini_text(prompt: str, system_instruction: str = None) -> str:
         except Exception as api_err:
             err_str = str(api_err)
             # Automatic resilient fallback for models deprecated by Google's API for new keys
-            if "no longer available to new users" in err_str or ("404" in err_str and "gemini-2.5" in model_name):
-                fallback_name = "gemini-flash-latest"
+            if "no longer available to new users" in err_str or "404" in err_str:
+                fallback_name = "gemini-3.5-flash"
                 fallback_model = genai.GenerativeModel(model_name=fallback_name, **kwargs)
                 response = fallback_model.generate_content(prompt)
             else:

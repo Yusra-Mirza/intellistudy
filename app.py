@@ -50,8 +50,6 @@ PAGES = [
 
 if "current_page" not in st.session_state:
     st.session_state.current_page = "🏠 Dashboard"
-if "nav_radio_selection" not in st.session_state:
-    st.session_state.nav_radio_selection = "🏠 Dashboard"
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "prefilled_prompt" not in st.session_state:
@@ -74,9 +72,13 @@ if "completed_study_days" not in st.session_state:
     st.session_state.completed_study_days = set()
 
 def navigate_to(page_name: str):
-    """Safely switches pages and triggers a clean rerun."""
+    """Safely switches pages and triggers a clean rerun.
+    
+    We only set `current_page` here (a plain state key, not a widget key).
+    The sidebar radio index is derived from `current_page` BEFORE the widget
+    is instantiated, so we never touch the widget key after render.
+    """
     st.session_state.current_page = page_name
-    st.session_state.nav_radio_selection = page_name
     st.rerun()
 
 def on_nav_change():
@@ -102,9 +104,14 @@ with st.sidebar:
     st.caption("Personalized learning with your own materials.")
     st.markdown("<hr style='margin: 0.8rem 0; border: none; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
 
+    # Derive the radio index from current_page BEFORE the widget is created,
+    # so we never mutate the widget key (`nav_radio_selection`) after render.
+    _nav_index = PAGES.index(st.session_state.current_page) if st.session_state.current_page in PAGES else 0
+
     st.radio(
         "Navigation",
         PAGES,
+        index=_nav_index,
         key="nav_radio_selection",
         on_change=on_nav_change,
         label_visibility="collapsed"
